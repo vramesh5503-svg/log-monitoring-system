@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Log Security Monitoring System — Python dependencies
+# Install with:  pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12         # required for file uploads (UploadFile)
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.36
+psycopg2-binary>=2.9.9           # PostgreSQL support (Render / production)
+
+# ── Authentication ────────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0  # JWT encode / decode
+passlib[bcrypt]==1.7.4            # bcrypt password hashing
+bcrypt==4.2.1
+
+# ── Validation / settings ─────────────────────────────────────────────────────
+pydantic==2.10.3
+pydantic-settings==2.6.1         # BaseSettings with .env support
+email-validator==2.2.0           # EmailStr field validation
+
+# ── File monitoring ───────────────────────────────────────────────────────────
+watchdog==6.0.0                  # real-time file system events
+
+# ── Data processing ───────────────────────────────────────────────────────────
+pandas==2.2.3                    # used for bulk log analysis helpers
+
+# ── PDF reports ───────────────────────────────────────────────────────────────
+reportlab==4.2.5                 # PDF generation
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1             # load .env in development
+aiofiles==24.1.0                 # async file I/O helpers
