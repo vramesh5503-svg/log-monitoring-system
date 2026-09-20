@@ -13,18 +13,27 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 function getWebSocketUrl() {
   const envWs = import.meta.env.VITE_WS_URL
   if (envWs && typeof envWs === 'string') {
-    let url = envWs.trim()
-    if (url.startsWith('https://')) {
-      url = 'wss://' + url.slice(8)
-    } else if (url.startsWith('http://')) {
-      url = 'ws://' + url.slice(7)
+    let url = envWs.trim().replace(/^['"]|['"]$/g, '')
+    if (url && !url.includes('<') && !url.includes('>')) {
+      if (url.startsWith('https://')) {
+        url = 'wss://' + url.slice(8)
+      } else if (url.startsWith('http://')) {
+        url = 'ws://' + url.slice(7)
+      } else if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+        url = 'wss://' + url
+      }
+      try {
+        new URL(url)
+        return url
+      } catch {
+        // invalid URL fallback
+      }
     }
-    return url
   }
 
   // Fallback: derive from VITE_API_BASE_URL if provided
   const apiBase = import.meta.env.VITE_API_BASE_URL
-  if (apiBase && typeof apiBase === 'string' && apiBase.startsWith('http')) {
+  if (apiBase && typeof apiBase === 'string' && apiBase.startsWith('http') && !apiBase.includes('<') && !apiBase.includes('>')) {
     try {
       const parsed = new URL(apiBase)
       const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:'

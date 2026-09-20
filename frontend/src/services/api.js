@@ -8,8 +8,37 @@
 
 import axios from 'axios'
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-const BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl
+function resolveBaseUrl() {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (!envUrl || typeof envUrl !== 'string') return '/api/v1'
+  let url = envUrl.trim().replace(/^['"]|['"]$/g, '')
+  if (!url || url === '/api/v1') return '/api/v1'
+
+  // If user pasted placeholder with brackets, fallback safely
+  if (url.includes('<') || url.includes('>')) {
+    console.warn('VITE_API_BASE_URL contains placeholder brackets "< >". Falling back to /api/v1.')
+    return '/api/v1'
+  }
+
+  // Prepend https:// if protocol is missing
+  if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+    url = 'https://' + url
+  }
+
+  // Validate URL structure
+  try {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      new URL(url)
+    }
+  } catch (e) {
+    console.warn('Invalid VITE_API_BASE_URL provided:', url, e)
+    return '/api/v1'
+  }
+
+  return url.endsWith('/') ? url.slice(0, -1) : url
+}
+
+const BASE_URL = resolveBaseUrl()
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -61,6 +90,9 @@ export function getErrorMessage(err, fallback = 'An unexpected error occurred.')
   }
   if (!err?.response && (err?.message === 'Network Error' || err?.code === 'ERR_NETWORK')) {
     return 'Unable to connect to the backend server. Please verify the API is running.'
+  }
+  if (err?.message?.includes("Failed to construct 'URL'") || err?.message?.includes('Invalid URL')) {
+    return "Invalid backend URL in Vercel. In your Vercel Settings -> Environment Variables, replace '<your-backend>' with your actual Render service URL (e.g. https://your-backend-name.onrender.com/api/v1) without '<' or '>' brackets."
   }
   if (err?.response?.status === 405 || err?.response?.status === 404) {
     return 'Backend API is not reachable (HTTP ' + err.response.status + '). Please set VITE_API_BASE_URL in your Vercel project environment variables to point to your backend API.'
