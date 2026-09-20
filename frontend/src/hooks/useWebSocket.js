@@ -34,10 +34,13 @@ function getWebSocketUrl() {
     }
   }
 
-  // Fallback: local dev vs HTTPS production
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
-  const defaultProto = isHttps ? 'wss:' : 'ws:'
-  return `${defaultProto}//localhost:8000/ws`
+  // Fallback: use current window location (works via Vite proxy & network IP)
+  if (typeof window !== 'undefined' && window.location?.host) {
+    const defaultProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${defaultProto}//${window.location.host}/ws`
+  }
+
+  return 'ws://localhost:8000/ws'
 }
 
 const MAX_RETRIES   = 10

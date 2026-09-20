@@ -48,5 +48,23 @@ api.interceptors.response.use(
   }
 )
 
+export function getErrorMessage(err, fallback = 'An unexpected error occurred.') {
+  const detail = err?.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail
+      .map((d) => (typeof d === 'string' ? d : d.msg || JSON.stringify(d)))
+      .join(', ')
+  }
+  if (detail && typeof detail === 'object') {
+    return JSON.stringify(detail)
+  }
+  if (!err?.response && (err?.message === 'Network Error' || err?.code === 'ERR_NETWORK')) {
+    return 'Unable to connect to the backend server. Please verify the API is running.'
+  }
+  if (err?.message) return err.message
+  return fallback
+}
+
 export default api
 

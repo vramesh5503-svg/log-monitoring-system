@@ -33,9 +33,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    // Disable esbuild dep-scan — required when running on a Windows network drive (UNC path)
-    // where esbuild's native realpath call returns EPERM.
-    noDiscovery: true,
-    include: [],
+    include: ['recharts', 'lodash', 'lodash/get'],
   },
 })

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * RegisterPage — public route at /register
  *
  * Features:
@@ -8,7 +8,7 @@
  *  - Redirects to /dashboard on success
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   FiShield, FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiCheck,
@@ -17,6 +17,7 @@ import toast from 'react-hot-toast'
 
 import { useAuth } from '../context/AuthContext'
 import { authService } from '../services/authService'
+import { getErrorMessage } from '../services/api'
 
 /* ── Password strength helper ────────────────────────────────────────────── */
 function getStrength(pw) {
@@ -32,8 +33,14 @@ const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong']
 const strengthColor = ['', 'bg-rose-500', 'bg-yellow-500', 'bg-sky-500', 'bg-emerald-500']
 
 export default function RegisterPage() {
-  const { login }  = useAuth()
+  const { login, user }  = useAuth()
   const navigate   = useNavigate()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, navigate])
 
   const [form, setForm] = useState({
     username: '', email: '', password: '', confirm: '',
@@ -60,6 +67,8 @@ export default function RegisterPage() {
       errs.password = 'Password must be at least 8 characters.'
     if (!/[0-9]/.test(form.password))
       errs.password = 'Password must contain at least one digit.'
+    if (!/[a-zA-Z]/.test(form.password))
+      errs.password = 'Password must contain at least one letter.'
     if (form.password !== form.confirm)
       errs.confirm = 'Passwords do not match.'
     return errs
@@ -86,7 +95,7 @@ export default function RegisterPage() {
       toast.success('Account created! Welcome aboard.')
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Registration failed.'
+      const msg = getErrorMessage(err, 'Registration failed.')
       toast.error(msg)
       setErrors({ general: msg })
     } finally {

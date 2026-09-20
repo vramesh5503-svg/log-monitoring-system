@@ -1,9 +1,10 @@
-﻿/**
+/**
  * useLogs — paginated, filtered log list with debounced search.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { logService } from '../services/logService'
+import { getErrorMessage } from '../services/api'
 
 const DEFAULT_FILTERS = {
   search:     '',
@@ -45,7 +46,7 @@ export function useLogs(pageSize = 50) {
       setTotalPages(data.total_pages)
       setError(null)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load logs.')
+      setError(getErrorMessage(err, 'Failed to load logs.'))
     } finally {
       setLoading(false)
     }

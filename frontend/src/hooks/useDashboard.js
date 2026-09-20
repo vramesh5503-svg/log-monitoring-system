@@ -1,10 +1,11 @@
-﻿/**
+/**
  * useDashboard — fetches aggregated stats for the dashboard overview.
  * Auto-refreshes every 30 seconds while the component is mounted.
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import { logService } from '../services/logService'
+import { getErrorMessage } from '../services/api'
 
 export function useDashboard(refreshInterval = 30_000) {
   const [stats,   setStats]   = useState(null)
@@ -17,7 +18,7 @@ export function useDashboard(refreshInterval = 30_000) {
       setStats(data)
       setError(null)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load dashboard stats.')
+      setError(getErrorMessage(err, 'Failed to load dashboard stats.'))
     } finally {
       setLoading(false)
     }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Root application component.
  *
  * Defines the full route tree:
@@ -16,7 +16,7 @@
  * in the location state so the login page can redirect back after auth.
  */
 
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import { useAuth } from './context/AuthContext'
 import Layout      from './components/Layout'
@@ -34,6 +34,7 @@ import SettingsPage from './pages/SettingsPage'
 /* ── Guard ────────────────────────────────────────────────────────────────── */
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -44,7 +45,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   return children

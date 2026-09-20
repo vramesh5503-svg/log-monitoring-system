@@ -116,12 +116,12 @@ def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
     """
-    Verify username + password.
+    Verify username + password (supports either username or email).
 
     Returns:
         User ORM object on success, None on failure.
     """
-    user = get_user_by_username(db, username)
+    user = get_user_by_username(db, username) or get_user_by_email(db, username)
     if not user:
         return None
     if not verify_password(password, user.password):

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LoginPage — public route at /login
  *
  * Features:
@@ -9,21 +9,28 @@
  *  - Cybersecurity glassmorphism theme with animated background
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { FiShield, FiUser, FiLock, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 
 import { useAuth } from '../context/AuthContext'
 import { authService } from '../services/authService'
+import { getErrorMessage } from '../services/api'
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
 
   // Redirect back to the page that required auth, default → dashboard
   const from = location.state?.from?.pathname || '/dashboard'
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, navigate])
 
   const [form, setForm]         = useState({ username: '', password: '' })
   const [showPass, setShowPass] = useState(false)
@@ -38,7 +45,7 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.username.trim() || !form.password) {
-      setError('Please enter your username and password.')
+      setError('Please enter your username/email and password.')
       return
     }
 
@@ -51,7 +58,7 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${data.user.username}!`)
       navigate(from, { replace: true })
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Login failed. Check your credentials.'
+      const msg = getErrorMessage(err, 'Login failed. Check your credentials.')
       setError(msg)
     } finally {
       setLoading(false)
@@ -94,10 +101,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
-            {/* Username */}
+            {/* Username / Email */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5" htmlFor="username">
-                Username
+                Username or Email
               </label>
               <div className="relative">
                 <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
@@ -106,7 +113,7 @@ export default function LoginPage() {
                   name="username"
                   type="text"
                   autoComplete="username"
-                  placeholder="your_username"
+                  placeholder="username or email"
                   value={form.username}
                   onChange={handleChange}
                   className="input-field pl-10"
@@ -161,10 +168,14 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Default credentials hint */}
-          <div className="mt-4 p-3 bg-sky-500/5 border border-sky-500/10 rounded-lg">
+          {/* Credentials hint */}
+          <div className="mt-4 p-3 bg-sky-500/5 border border-sky-500/10 rounded-lg space-y-1">
+            <p className="text-xs text-slate-400 text-center font-medium">Available Credentials:</p>
             <p className="text-xs text-slate-500 text-center">
-              Default admin: <span className="text-sky-400 font-mono">admin</span> / <span className="text-sky-400 font-mono">Admin@12345</span>
+              Login ID: <span className="text-sky-400 font-mono">admin</span> &bull; Pass: <span className="text-sky-400 font-mono">Admin@12345</span>
+            </p>
+            <p className="text-xs text-slate-500 text-center">
+              Login ID: <span className="text-sky-400 font-mono">security_admin</span> &bull; Pass: <span className="text-sky-400 font-mono">Admin@2026!</span>
             </p>
           </div>
 

@@ -84,19 +84,30 @@ def _seed_admin() -> None:
         from app.services.auth_service import hash_password
 
         existing = db.query(User).filter(User.username == admin_username).first()
-        if existing:
-            return  # already seeded
+        if not existing:
+            admin = User(
+                username  = admin_username,
+                email     = admin_email,
+                password  = hash_password(admin_password),
+                role      = UserRole.admin,
+                is_active = True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Default admin user created -> username: '%s'", admin_username)
 
-        admin = User(
-            username  = admin_username,
-            email     = admin_email,
-            password  = hash_password(admin_password),
-            role      = UserRole.admin,
-            is_active = True,
-        )
-        db.add(admin)
-        db.commit()
-        logger.info("Default admin user created -> username: '%s'", admin_username)
+        sec_admin = db.query(User).filter(User.username == "security_admin").first()
+        if not sec_admin:
+            sec_admin = User(
+                username  = "security_admin",
+                email     = "security@logsecurity.com",
+                password  = hash_password("Admin@2026!"),
+                role      = UserRole.admin,
+                is_active = True,
+            )
+            db.add(sec_admin)
+            db.commit()
+            logger.info("Default security_admin user created -> username: 'security_admin'")
     except Exception as exc:
         logger.error("Failed to seed admin user: %s", exc)
         db.rollback()

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useMonitor — wraps monitoring start/stop/status API calls
  * and exposes upload progress state.
  */
@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { monitorService } from '../services/monitorService'
+import { getErrorMessage } from '../services/api'
 
 export function useMonitor() {
   const [status,   setStatus]   = useState({ is_running: false, watch_path: null })
@@ -33,7 +34,7 @@ export function useMonitor() {
       setStatus(data)
       toast.success('Monitoring started.')
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to start monitoring.')
+      toast.error(getErrorMessage(err, 'Failed to start monitoring.'))
     } finally {
       setLoading(false)
     }
@@ -47,7 +48,7 @@ export function useMonitor() {
       setStatus(data)
       toast.success('Monitoring stopped.')
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to stop monitoring.')
+      toast.error(getErrorMessage(err, 'Failed to stop monitoring.'))
     } finally {
       setLoading(false)
     }
@@ -62,7 +63,7 @@ export function useMonitor() {
       toast.success(`${data.message} (${data.detail?.lines_processed ?? 0} lines)`)
       return data
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Upload failed.')
+      toast.error(getErrorMessage(err, 'Upload failed.'))
       throw err
     } finally {
       setUploading(false)

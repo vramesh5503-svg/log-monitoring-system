@@ -1,9 +1,10 @@
-﻿/**
+/**
  * useAlerts — fetches alert list + summary counts.
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import { alertService } from '../services/alertService'
+import { getErrorMessage } from '../services/api'
 
 export function useAlerts(pageSize = 50) {
   const [alerts,     setAlerts]     = useState([])
@@ -33,7 +34,7 @@ export function useAlerts(pageSize = 50) {
       setSummary(summaryRes.data)
       setError(null)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load alerts.')
+      setError(getErrorMessage(err, 'Failed to load alerts.'))
     } finally {
       setLoading(false)
     }
