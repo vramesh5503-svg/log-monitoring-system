@@ -108,6 +108,19 @@ def _seed_admin() -> None:
             db.add(sec_admin)
             db.commit()
             logger.info("Default security_admin user created -> username: 'security_admin'")
+
+        ramesh_user = db.query(User).filter(User.username == "ramesh").first()
+        if not ramesh_user:
+            ramesh_user = User(
+                username  = "ramesh",
+                email     = "ramesh@logsecurity.com",
+                password  = hash_password("Ramesh@2007"),
+                role      = UserRole.admin,
+                is_active = True,
+            )
+            db.add(ramesh_user)
+            db.commit()
+            logger.info("Default ramesh user created -> username: 'ramesh'")
     except Exception as exc:
         logger.error("Failed to seed admin user: %s", exc)
         db.rollback()

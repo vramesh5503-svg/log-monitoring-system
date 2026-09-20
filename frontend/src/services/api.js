@@ -25,6 +25,14 @@ function resolveBaseUrl() {
     url = 'https://' + url
   }
 
+  // Strip trailing slashes
+  url = url.replace(/\/+$/, '')
+
+  // If user provided origin without /api/v1, auto-append /api/v1
+  if (!url.endsWith('/api/v1')) {
+    url = `${url}/api/v1`
+  }
+
   // Validate URL structure
   try {
     if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -35,7 +43,7 @@ function resolveBaseUrl() {
     return '/api/v1'
   }
 
-  return url.endsWith('/') ? url.slice(0, -1) : url
+  return url
 }
 
 const BASE_URL = resolveBaseUrl()
@@ -78,6 +86,9 @@ api.interceptors.response.use(
 )
 
 export function getErrorMessage(err, fallback = 'An unexpected error occurred.') {
+  if (err?.response?.status === 404 || err?.response?.data?.detail === 'Not Found') {
+    return 'Backend endpoint not found (404). Please ensure VITE_API_BASE_URL ends with /api/v1 (e.g. https://your-backend.onrender.com/api/v1).'
+  }
   const detail = err?.response?.data?.detail
   if (typeof detail === 'string') return detail
   if (Array.isArray(detail)) {
@@ -94,8 +105,8 @@ export function getErrorMessage(err, fallback = 'An unexpected error occurred.')
   if (err?.message?.includes("Failed to construct 'URL'") || err?.message?.includes('Invalid URL')) {
     return "Invalid backend URL in Vercel. In your Vercel Settings -> Environment Variables, replace '<your-backend>' with your actual Render service URL (e.g. https://your-backend-name.onrender.com/api/v1) without '<' or '>' brackets."
   }
-  if (err?.response?.status === 405 || err?.response?.status === 404) {
-    return 'Backend API is not reachable (HTTP ' + err.response.status + '). Please set VITE_API_BASE_URL in your Vercel project environment variables to point to your backend API.'
+  if (err?.response?.status === 405) {
+    return 'Backend API is not reachable (HTTP 405). Please set VITE_API_BASE_URL in your Vercel project environment variables to point to your backend API.'
   }
   if (err?.message) return err.message
   return fallback
