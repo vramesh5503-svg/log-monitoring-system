@@ -86,6 +86,14 @@ api.interceptors.response.use(
 )
 
 export function getErrorMessage(err, fallback = 'An unexpected error occurred.') {
+  const isRenderNoServer =
+    err?.response?.headers?.['x-render-routing'] === 'no-server' ||
+    (err?.response?.status === 404 && typeof err?.response?.data === 'string' && err?.response?.data.trim() === 'Not Found')
+
+  if (isRenderNoServer) {
+    return 'Backend service not found on Render (x-render-routing: no-server). This Render URL does not exist yet. Please create and deploy the backend on Render.com first.'
+  }
+
   if (err?.response?.status === 404 || err?.response?.data?.detail === 'Not Found') {
     return 'Backend endpoint not found (404). Please ensure VITE_API_BASE_URL ends with /api/v1 (e.g. https://your-backend.onrender.com/api/v1).'
   }
