@@ -62,6 +62,9 @@ export function getErrorMessage(err, fallback = 'An unexpected error occurred.')
   if (!err?.response && (err?.message === 'Network Error' || err?.code === 'ERR_NETWORK')) {
     return 'Unable to connect to the backend server. Please verify the API is running.'
   }
+  if (err?.response?.status === 405 || err?.response?.status === 404) {
+    return 'Backend API is not reachable (HTTP ' + err.response.status + '). Please set VITE_API_BASE_URL in your Vercel project environment variables to point to your backend API.'
+  }
   if (err?.message) return err.message
   return fallback
 }
