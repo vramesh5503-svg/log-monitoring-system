@@ -1,17 +1,18 @@
 /**
- * LoginPage — public route at /login
+ * LoginPage - public route at /login
  *
  * Features:
  *  - Email/username + password form with validation
  *  - Shows/hides password toggle
- *  - Loading state during API call
+ *  - Loading state with Render wake-up indicator
+ *  - Quick credentials fill buttons
  *  - Redirects to /dashboard (or previous location) on success
  *  - Cybersecurity glassmorphism theme with animated background
  */
 
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { FiShield, FiUser, FiLock, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi'
+import { FiShield, FiUser, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 
 import { useAuth } from '../context/AuthContext'
@@ -23,7 +24,7 @@ export default function LoginPage() {
   const navigate  = useNavigate()
   const location  = useLocation()
 
-  // Redirect back to the page that required auth, default → dashboard
+  // Redirect back to the page that required auth, default -> dashboard
   const from = location.state?.from?.pathname || '/dashboard'
 
   useEffect(() => {
@@ -40,6 +41,12 @@ export default function LoginPage() {
   const handleChange = (e) => {
     setError('')
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleQuickFill = (username, password) => {
+    setError('')
+    setForm({ username, password })
+    toast('Credentials filled. Click Sign In!', { icon: '🔑' })
   }
 
   const handleSubmit = async (e) => {
@@ -93,9 +100,9 @@ export default function LoginPage() {
 
           {/* Error banner */}
           {error && (
-            <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 mb-5 text-rose-400 text-sm animate-fade-in">
-              <FiAlertCircle className="shrink-0" />
-              <span>{error}</span>
+            <div className="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 mb-5 text-rose-400 text-sm animate-fade-in">
+              <FiAlertCircle className="shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{error}</span>
             </div>
           )}
 
@@ -155,28 +162,55 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-2.5"
+              className="btn-primary w-full flex flex-col items-center justify-center gap-1 py-2.5"
             >
               {loading ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in…
+                  <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Signing in...</span>
+                  </div>
+                  <span className="text-[11px] text-white/70 font-normal">
+                    Waking up backend on Render (may take 30-45s)...
+                  </span>
                 </>
               ) : (
-                'Sign In'
+                <span>Sign In</span>
               )}
             </button>
           </form>
 
           {/* Credentials hint */}
-          <div className="mt-4 p-3 bg-sky-500/5 border border-sky-500/10 rounded-lg space-y-1">
-            <p className="text-xs text-slate-400 text-center font-medium">Available Credentials:</p>
-            <p className="text-xs text-slate-500 text-center">
-              Login ID: <span className="text-sky-400 font-mono">admin</span> &bull; Pass: <span className="text-sky-400 font-mono">Admin@12345</span>
+          <div className="mt-5 p-3.5 bg-sky-500/5 border border-sky-500/10 rounded-lg space-y-2">
+            <p className="text-xs text-slate-400 text-center font-medium">
+              Click to autofill available credentials:
             </p>
-            <p className="text-xs text-slate-500 text-center">
-              Login ID: <span className="text-sky-400 font-mono">security_admin</span> &bull; Pass: <span className="text-sky-400 font-mono">Admin@2026!</span>
-            </p>
+            <div className="space-y-1.5">
+              <button
+                type="button"
+                onClick={() => handleQuickFill('ramesh', 'Ramesh@2007')}
+                className="w-full flex items-center justify-between text-xs px-2.5 py-1.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-slate-300 transition-colors"
+              >
+                <span>User: <strong className="text-sky-400 font-mono">ramesh</strong></span>
+                <span className="text-slate-400 font-mono">Pass: Ramesh@2007</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('admin', 'Admin@12345')}
+                className="w-full flex items-center justify-between text-xs px-2.5 py-1.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-slate-300 transition-colors"
+              >
+                <span>User: <strong className="text-sky-400 font-mono">admin</strong></span>
+                <span className="text-slate-400 font-mono">Pass: Admin@12345</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('security_admin', 'Admin@2026!')}
+                className="w-full flex items-center justify-between text-xs px-2.5 py-1.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-slate-300 transition-colors"
+              >
+                <span>User: <strong className="text-sky-400 font-mono">security_admin</strong></span>
+                <span className="text-slate-400 font-mono">Pass: Admin@2026!</span>
+              </button>
+            </div>
           </div>
 
           {/* Register link */}
@@ -191,4 +225,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

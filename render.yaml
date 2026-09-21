@@ -1,7 +1,8 @@
-services:
+﻿services:
   - type: web
     name: log-security-backend
     env: python
+    rootDir: backend
     region: oregon
     plan: free
     buildCommand: pip install -r requirements.txt

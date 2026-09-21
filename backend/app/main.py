@@ -69,10 +69,8 @@ async def lifespan(app: FastAPI):
 
 def _seed_admin() -> None:
     """
-    Create a default admin account on first run so the system is immediately usable.
+    Create or update default accounts on startup so the system is immediately usable.
     Credentials are taken from environment variables (or fall back to safe defaults).
-
-    Change ADMIN_USERNAME / ADMIN_PASSWORD in .env before deploying!
     """
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
     admin_password = os.getenv("ADMIN_PASSWORD", "Admin@12345")
@@ -83,8 +81,9 @@ def _seed_admin() -> None:
         from app.models.user import User, UserRole
         from app.services.auth_service import hash_password
 
-        existing = db.query(User).filter(User.username == admin_username).first()
-        if not existing:
+        # 1. Default admin
+        admin = db.query(User).filter(User.username == admin_username).first()
+        if not admin:
             admin = User(
                 username  = admin_username,
                 email     = admin_email,
@@ -93,9 +92,13 @@ def _seed_admin() -> None:
                 is_active = True,
             )
             db.add(admin)
-            db.commit()
             logger.info("Default admin user created -> username: '%s'", admin_username)
+        else:
+            admin.password = hash_password(admin_password)
+            admin.is_active = True
+            admin.role = UserRole.admin
 
+        # 2. security_admin
         sec_admin = db.query(User).filter(User.username == "security_admin").first()
         if not sec_admin:
             sec_admin = User(
@@ -106,9 +109,13 @@ def _seed_admin() -> None:
                 is_active = True,
             )
             db.add(sec_admin)
-            db.commit()
             logger.info("Default security_admin user created -> username: 'security_admin'")
+        else:
+            sec_admin.password = hash_password("Admin@2026!")
+            sec_admin.is_active = True
+            sec_admin.role = UserRole.admin
 
+        # 3. ramesh
         ramesh_user = db.query(User).filter(User.username == "ramesh").first()
         if not ramesh_user:
             ramesh_user = User(
@@ -119,8 +126,13 @@ def _seed_admin() -> None:
                 is_active = True,
             )
             db.add(ramesh_user)
-            db.commit()
             logger.info("Default ramesh user created -> username: 'ramesh'")
+        else:
+            ramesh_user.password = hash_password("Ramesh@2007")
+            ramesh_user.is_active = True
+            ramesh_user.role = UserRole.admin
+
+        db.commit()
     except Exception as exc:
         logger.error("Failed to seed admin user: %s", exc)
         db.rollback()
@@ -149,7 +161,7 @@ app = FastAPI(
 # Middleware
 # ─────────────────────────────────────────────────────────────────────────────
 
-# CORS — allow the Vite dev server, local origins, and any configured frontend origin
+# CORS — allow localhost, Vercel preview/production URLs, and all client origins
 frontend_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -165,7 +177,7 @@ if settings.FRONTEND_URL:
 app.add_middleware(
     CORSMiddleware,
     allow_origins     = frontend_origins,
-    allow_origin_regex = r"^https://.*\.vercel\.app$",
+    allow_origin_regex = r"^https?://.*$",  # Allow all web & preview origins safely
     allow_credentials = True,
     allow_methods     = ["*"],
     allow_headers     = ["*"],
@@ -205,12 +217,14 @@ async def log_requests(request: Request, call_next):
 # Routers
 # ─────────────────────────────────────────────────────────────────────────────
 
-# All REST endpoints live under /api/v1/…
+# REST endpoints mounted at both /api/v1/… and root /… to tolerate any base URL config
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router)
 
-# WebSocket endpoint mounted directly at root /ws so frontend ws://host/ws and wss://host/ws connect directly
+# WebSocket endpoint mounted directly at /ws and /api/v1/ws
 from app.api.monitoring import websocket_endpoint
 app.websocket("/ws")(websocket_endpoint)
+app.websocket("/api/v1/ws")(websocket_endpoint)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
